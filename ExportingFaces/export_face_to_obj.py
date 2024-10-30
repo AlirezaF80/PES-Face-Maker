@@ -1,7 +1,8 @@
 import os
+import sys
 import random
-
 import bpy
+
 
 def import_face(fpk_path):
     bpy.ops.extract_scene.fpk(filepath=fpk_path, face_high_fmdl=True, hair_high_fmdl=True, oral_fmdl=True,
@@ -9,11 +10,11 @@ def import_face(fpk_path):
 
 
 def change_to_textured_shading():
-    for area in bpy.context.screen.areas:  # iterate through areas in current screen
+    for area in bpy.context.screen.areas:
         if area.type == 'VIEW_3D':
-            for space in area.spaces:  # iterate through spaces in current VIEW_3D area
-                if space.type == 'VIEW_3D':  # check if space is a 3D view
-                    space.viewport_shade = 'TEXTURED'  # set the viewport shading to rendered
+            for space in area.spaces:
+                if space.type == 'VIEW_3D':
+                    space.viewport_shade = 'TEXTURED'
 
 
 def remove_everything_but(objs_to_keep):
@@ -47,7 +48,7 @@ def set_object_select_by_name(name, select=True):
 def select_object_as_active(obj_name):
     active_obj = get_object_by_name(obj_name)
     bpy.context.scene.objects.active = active_obj
-    
+
 
 def remove_doubles():
     bpy.ops.object.editmode_toggle()
@@ -59,8 +60,8 @@ def import_obj_file(file_path):
     bpy.ops.import_scene.obj(filepath=file_path, split_mode='OFF')
 
 
-def export_selected_to_obj(file_name, export_path):
-    bpy.ops.export_scene.obj(filepath=export_path + file_name + '.obj', use_selection=True, use_materials=False,
+def export_selected_to_obj(export_path):
+    bpy.ops.export_scene.obj(filepath=export_path, use_selection=True, use_materials=False,
                              keep_vertex_order=True)
 
 
@@ -69,7 +70,6 @@ def find_next_face(faces_path, export_path):
     all_faces_ids = set(os.listdir(faces_path))
     exported_objs = list(map(os.path.basename, glob.glob(export_path + '/*.obj')))
     exported_ids = set(map(lambda x: x.replace('.obj', ''), exported_objs))
-    # remove exported_ids from all_faces_ids
     remaining_ids = all_faces_ids - exported_ids
     if len(remaining_ids) == 0:
         print('All faces exported!')
@@ -92,18 +92,9 @@ def copy_vertices_from_to(from_obj_name, to_obj_name, from_uv_name, to_uv_name):
     bpy.ops.object.copy_vert_loc_by_uv()
 
 
-### NOTE: To use this script, you need Copy Vertices by UV add-on by me and Face-Hair Modifier add-on by MJTS.
-
-base_path = "D:/Projects/Pycharm Projects/PES-Face-Maker/"
-faces_path = 'D:/Games Installers/PES 2021/DT36_21/Asset/model/character/face/real'
-export_path = base_path + "/obj_exports/pes21_dt36/"
-default_face_path = base_path + '/assets/default_face.obj'
-
-objs_to_keep = ['mesh_id_face_0', 'mesh_id_face_2', 'mesh_id_hair_0']
-
-face_id = find_next_face(faces_path, export_path)
-if face_id is not None:
-    fpk_path = faces_path + '/' + face_id + '/#Win/face.fpk'
+def main(face_path, export_path, default_face_path):
+    objs_to_keep = ['mesh_id_face_0', 'mesh_id_face_2', 'mesh_id_hair_0']
+    fpk_path = os.path.join(face_path, '#Win/face.fpk')
     import_face(fpk_path)
     remove_everything_but(objs_to_keep)
     join_all_objs_with('mesh_id_face_0')
@@ -119,6 +110,36 @@ if face_id is not None:
     copy_vertices_from_to('mesh_id_face_0', 'default_face', 'UVMap', 'UVMap')
     remove_everything_but(['default_face'])
     select_all_objects()
-    export_selected_to_obj(face_id, export_path)
-    print("Exported face " + face_id)
+    export_selected_to_obj(export_path)
+    print("Exported face to " + export_path)
     clear_unused_files()
+
+# face_path = "D:/Games Installers/PES 2021/DT36_21/Asset/model/character/face/real/557"
+# export_path = "D:/Projects/Pycharm Projects/PES-Face-Maker/obj_exports/pes21_dt36/557.obj"
+# default_face_path = "D:/Projects/Pycharm Projects/PES-Face-Maker/assets/avg_head.obj"
+
+# main(face_path, export_path, default_face_path)
+
+if __name__ == "__main__":
+    # Use sys.argv to parse command-line arguments manually
+    args = sys.argv
+
+    # Initialize variables for arguments
+    face_path = None
+    export_path = None
+    default_face_path = None
+
+    # Parse command-line arguments
+    for i in range(len(args)):
+        if args[i] == '--face_path':
+            face_path = args[i + 1]
+        elif args[i] == '--export_path':
+            export_path = args[i + 1]
+        elif args[i] == '--default_face_path':
+            default_face_path = args[i + 1]
+
+    # Ensure all arguments are provided
+    if face_path and export_path and default_face_path:
+        main(face_path, export_path, default_face_path)
+    else:
+        print("Error: Missing required arguments --face_path, --export_path, or --default_face_path")
