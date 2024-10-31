@@ -17,7 +17,7 @@ def load_all_obj_files(folder_path):
     Load all OBJ files in a folder and stack their vertex coordinates.
     """
     all_vertices = []
-    obj_files = [f for f in os.listdir(folder_path) if f.endswith('.obj')][:500]
+    obj_files = [f for f in os.listdir(folder_path) if f.endswith('.obj')]
     obj_files.sort()  # Ensure consistent order
 
     for obj_file in obj_files:
