@@ -42,6 +42,7 @@ def main(face_id, face_path, output_dir):
     file_name = face_id + ".png"
     bpy.context.scene.render.filepath = os.path.join(output_dir, file_name)
     bpy.ops.render.render(write_still=True)
+    clear_face_unused_files()
 
 
 if __name__ == "__main__":
