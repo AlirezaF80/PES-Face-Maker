@@ -16,15 +16,6 @@ for face_path in tqdm(glob.glob(os.path.join(faces_folder_path, '*'))):
     export_path = os.path.join(export_folder_path, face_id + '.obj')
     print(f'Exporting face `{face_id}` to {export_path}')
 
-    # command = (
-    #     f'"{blender_path}" -b -P "{script_path}" -- '
-    #     f'--face_path "{face_path}" '
-    #     f'--export_path "{export_path}" '
-    #     f'--default_face_path "{default_face_path}"'
-    # )
-    # print(command)
-    # os.system(command)
-
     command = (
         f'"{blender_path}" -b -P "{script_path}" -- '
         f'--face_path "{face_path}" '
@@ -33,4 +24,4 @@ for face_path in tqdm(glob.glob(os.path.join(faces_folder_path, '*'))):
     )
 
     subprocess.run(command, shell=True)
-    break  # Remove this break to process all faces
+    # break  # Remove this break to process all faces
