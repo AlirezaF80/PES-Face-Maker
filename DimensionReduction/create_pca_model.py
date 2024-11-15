@@ -1,4 +1,6 @@
 import os
+from typing import Optional
+
 import numpy as np
 from sklearn.decomposition import PCA
 import trimesh
@@ -21,7 +23,7 @@ def load_all_obj_files(folder_path):
     all_vertices = []
     obj_files = [f for f in os.listdir(folder_path) if f.endswith('.obj')]
 
-    for obj_file in obj_files[:200]:
+    for obj_file in obj_files:
         file_path = os.path.join(folder_path, obj_file)
         vertices = load_obj_file(file_path)
         all_vertices.append(vertices)
@@ -36,37 +38,18 @@ def load_all_obj_files(folder_path):
     return np.array(all_vertices).reshape(len(all_vertices), -1)
 
 
-def apply_pca_on_models(data, variance_threshold=0.95):
+def get_pca_of_all_models(data, variance_threshold: Optional[float]):
     """
     Apply PCA on the stacked models to reduce dimensions and preserve a given variance.
     """
     # Apply PCA
-    pca = PCA()
-    data_pca = pca.fit_transform(data)
+    pca = PCA(n_components=variance_threshold) if variance_threshold is not None else PCA()
+    pca.fit_transform(data)
 
-    # Calculate cumulative variance
-    cumulative_variance = np.cumsum(pca.explained_variance_ratio_)
+    # Print the number of components available
+    print(f"Number of components: {len(pca.explained_variance_ratio_)}")
 
-    # Determine the number of components to retain
-    n_components = np.argmax(cumulative_variance >= variance_threshold) + 1
-
-    # Apply PCA with the optimal number of components
-    pca = PCA(n_components=n_components)
-    data_reduced = pca.fit_transform(data)
-    data_reconstructed = pca.inverse_transform(data_reduced)
-
-    print(
-        f"Optimal number of components: {n_components}, Cumulative variance: {cumulative_variance[n_components - 1]:.2f}")
-    return data_reduced, data_reconstructed, pca
-
-
-def save_reconstructed_obj(data, original_file_path, output_file_path):
-    """
-    Save reconstructed vertex coordinates as an OBJ file.
-    """
-    mesh = trimesh.load(original_file_path, process=False)
-    mesh.vertices = data
-    mesh.export(output_file_path)
+    return pca
 
 
 if __name__ == "__main__":
@@ -77,12 +60,7 @@ if __name__ == "__main__":
     all_vertices = load_all_obj_files(obj_folder_path)
 
     # Apply PCA on the stacked data
-    reduced_data, reconstructed_data, pca_model = apply_pca_on_models(all_vertices, variance_threshold=0.95)
+    pca_model = get_pca_of_all_models(all_vertices, variance_threshold=0.95)
 
-    # Save the reconstructed data for the first model as a sample
-    first_file_path = os.path.join(obj_folder_path, os.listdir(obj_folder_path)[0])
-    print(first_file_path)
-    output_file_path = "reconstructed_sample.obj"
-    save_reconstructed_obj(reconstructed_data[0].reshape(-1, 3), first_file_path, output_file_path)
-
-    print("Sample reconstructed OBJ saved.")
+    # Save PCA Model for later use
+    np.save("pca_model.npy", pca_model)
