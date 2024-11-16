@@ -41,12 +41,18 @@ def main(face_id, face_path, output_dir, disable_mouth):
     remove_objects('mesh_id_face_3', 'mesh_id_face_1')
 
     if disable_mouth:
-        mouth_obj = get_object_by_name('mouth')
-        mouth_obj.hide_render = True
-        mouth_obj.hide_viewport = True
-        oral_high_obj = get_object_by_name('MESH_oral')
-        oral_high_obj.hide_render = True
-        oral_high_obj.hide_viewport = True
+        try:
+            mouth_obj = get_object_by_name('mouth')
+            mouth_obj.hide_render = True
+            mouth_obj.hide_viewport = True
+        except:
+            print("Mouth object not found")
+        try:
+            oral_high_obj = get_object_by_name('MESH_oral')
+            oral_high_obj.hide_render = True
+            oral_high_obj.hide_viewport = True
+        except:
+            print("Oral high object not found")
 
     file_name = face_id + ".png"
     bpy.context.scene.render.filepath = os.path.join(output_dir, file_name)

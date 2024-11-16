@@ -47,9 +47,6 @@ def get_pca_of_all_models(data, variance_threshold: Optional[float]):
     pca = PCA(n_components=variance_threshold) if variance_threshold is not None else PCA()
     pca.fit_transform(data)
 
-    # Print the number of components available
-    print(f"Number of components: {len(pca.explained_variance_ratio_)}")
-
     return pca
 
 
@@ -74,7 +71,9 @@ if __name__ == "__main__":
     print(f"Stacked data shape: {all_vertices.shape}")
 
     # Apply PCA on the stacked data
-    pca_model = get_pca_of_all_models(all_vertices, variance_threshold=0.95)
+    pca_model = get_pca_of_all_models(all_vertices, variance_threshold=0.99)
+    # Print the number of components available
+    print(f"Number of components: {len(pca_model.explained_variance_ratio_)}")
 
     # Save PCA Model for later use
     np.save("pca_model.npy", pca_model)
