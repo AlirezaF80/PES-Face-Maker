@@ -4,6 +4,7 @@ from typing import Optional
 import numpy as np
 from sklearn.decomposition import PCA
 import trimesh
+from tqdm import tqdm
 
 
 def load_obj_file(file_path):
@@ -53,11 +54,24 @@ def get_pca_of_all_models(data, variance_threshold: Optional[float]):
 
 
 if __name__ == "__main__":
-    # Path to the folder containing OBJ files
-    obj_folder_path = "D:/Projects/Pycharm Projects/PES-Face-Maker/obj_exports/pes21_dt36"
+    OBJ_FOLDERS = ["D:/Projects/Pycharm Projects/PES-Face-Maker/obj_exports/pes21_dt36",
+                   "D:\Projects\Pycharm Projects\PES-Face-Maker\obj_exports\pes21_dlc1",
+                   "D:\Projects\Pycharm Projects\PES-Face-Maker\obj_exports\pes21_dlc2",
+                   "D:\Projects\Pycharm Projects\PES-Face-Maker\obj_exports\pes21_dlc3",
+                   "D:\Projects\Pycharm Projects\PES-Face-Maker\obj_exports\pes21_dlc4",
+                   "D:\Projects\Pycharm Projects\PES-Face-Maker\obj_exports\pes21_dlc5",
+                   "D:\Projects\Pycharm Projects\PES-Face-Maker\obj_exports\pes21_dlc6",
+                   "D:\Projects\Pycharm Projects\PES-Face-Maker\obj_exports\pes21_dlc7"]
 
-    # Load all OBJ files and stack vertex coordinates
-    all_vertices = load_all_obj_files(obj_folder_path)
+    print("Loading all OBJ files...")
+    all_vertices = []
+    for obj_folder_path in tqdm(OBJ_FOLDERS):
+        # Load all OBJ files and stack vertex coordinates
+        folder_all_vertices = load_all_obj_files(obj_folder_path)
+        all_vertices.append(folder_all_vertices)
+
+    all_vertices = np.vstack(all_vertices)
+    print(f"Stacked data shape: {all_vertices.shape}")
 
     # Apply PCA on the stacked data
     pca_model = get_pca_of_all_models(all_vertices, variance_threshold=0.95)
