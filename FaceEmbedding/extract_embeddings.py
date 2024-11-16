@@ -4,7 +4,6 @@ import numpy as np
 from tqdm import tqdm
 import glob
 from deepface import DeepFace
-import json
 import cv2
 
 EXPAND_PERCENT = 20
@@ -45,9 +44,8 @@ for face_id in tqdm(faces_to_extract_embeddings):
     embedding = np.array(embedding_objs[0]['embedding'])
     face_region = embedding_objs[0]['facial_area']
     face_region_sum += np.array([face_region['x'], face_region['y'], face_region['w'], face_region['h']])
-    embedding_path = os.path.join(EMBEDDINGS_EXPORT_FOLDER, f"{face_id}.json")
-    with open(embedding_path, 'w') as f:
-        json.dump(embedding.tolist(), f)
+    embedding_path = os.path.join(EMBEDDINGS_EXPORT_FOLDER, f"{face_id}.npy")
+    np.save(embedding_path, embedding)
 
 avg_face_region = face_region_sum / (len(faces_to_extract_embeddings) - len(bad_faces_ids))
 print(f"Avg face region: {avg_face_region}")
@@ -74,8 +72,7 @@ for face_id in tqdm(bad_faces_ids):
         tqdm.write(f"Multiple/No faces detected in {face_id}_cropped.png")
         continue
     embedding = np.array(embedding_objs[0]['embedding'])
-    embedding_path = os.path.join(EMBEDDINGS_EXPORT_FOLDER, f"{face_id}.json")
-    with open(embedding_path, 'w') as f:
-        json.dump(embedding.tolist(), f)
+    embedding_path = os.path.join(EMBEDDINGS_EXPORT_FOLDER, f"{face_id}.npy")
+    np.save(embedding_path, embedding)
 
 print("Embeddings extracted successfully.")
