@@ -22,7 +22,8 @@ for face_path in tqdm(not_yet_rendered_faces):
     command = (
         f'"{BLENDER_PATH}" "{BLEND_FILE_PATH}" -b -P "{SCRIPT_PATH}" -- '
         f'--face_path "{face_path}" '
-        f'--output_dir "{RENDER_OUTPUT_PATH}"'
+        f'--output_dir "{RENDER_OUTPUT_PATH}" '
+        f'--disable_mouth'
     )
 
     subprocess.run(command, shell=True)
