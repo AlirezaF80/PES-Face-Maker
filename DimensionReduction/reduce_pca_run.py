@@ -41,6 +41,7 @@ FACE_MODELS_PATH = f"D:/Projects/Pycharm Projects/PES-Face-Maker/obj_exports/{PE
 if __name__ == '__main__':
     # Load PCA Model
     pca_model = np.load(PCA_MODEL_PATH, allow_pickle=True).item()
+    print("PCA model loaded with shape:", pca_model.components_.shape)
 
     face_ids = set(map(lambda x: os.path.basename(x).replace('.obj', ''), glob.glob(f'{FACE_MODELS_PATH}/*.obj')))
     # Load data
@@ -48,7 +49,7 @@ if __name__ == '__main__':
         file_path = os.path.join(FACE_MODELS_PATH, f"{face_id}.obj")
         data = load_obj_file(file_path)
         data = data.reshape(1, -1)
-        if data.shape[1] != 6759:
+        if data.shape[1] != pca_model.components_.shape[1]:
             tqdm.write(f"Skipping {face_id}.obj due to incorrect number of vertices")
             continue
 
@@ -56,7 +57,7 @@ if __name__ == '__main__':
         data_reduced = reduce_dimensions(data, pca_model)
 
         # Save reduced data
-        np.save(os.path.join(PCA_OUTPUTS_PATH, f"{face_id}.npy"), data_reduced)
+        np.save(os.path.join(PCA_OUTPUTS_PATH, f"{face_id}.npy"), data_reduced[0])
 
         # Reconstruct data
         # data_reconstructed = reconstruct_data(data_reduced, pca_model)
