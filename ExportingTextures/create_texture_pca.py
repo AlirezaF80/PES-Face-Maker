@@ -28,10 +28,19 @@ print("Loaded all textures.")
 
 pca_start_time = time.time()
 # Apply PCA
-pca = PCA(n_components=0.95)
+pca = PCA(n_components=0.99)
 pca.fit_transform(all_textures)
 print(f"Number of components: {len(pca.explained_variance_ratio_)}")
 print(f"PCA took {time.time() - pca_start_time:.2f} seconds.")
 
 # Save PCA model
 np.save(os.path.join(BASE_PATH, "pca_texture_model.npy"), pca)
+
+# Reconstruct some textures and calculate the error
+n_reconstructions = 5
+compressed_textures = pca.transform(all_textures)[:n_reconstructions]
+reconstructed_textures = pca.inverse_transform(compressed_textures)
+reconstructed_textures = reconstructed_textures.reshape(n_reconstructions, TEXTURE_SIZE, TEXTURE_SIZE, 3)
+for i, texture in enumerate(reconstructed_textures):
+    cv2.imwrite(os.path.join(BASE_PATH, "reconstructed_textures", f"reconstructed_texture_{i}.png"), texture)
+    print(f"Reconstruction {i} error: {np.mean((all_textures[i] - reconstructed_textures[i].reshape(-1))**2)}")
