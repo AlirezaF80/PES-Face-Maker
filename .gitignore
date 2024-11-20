@@ -4,3 +4,4 @@ embeddings/*/*.npy
 face_images/*/*.png
 pca_outputs/*/*.npy
 obj_exports/*/*.obj
+texture_exports/*/*.png

@@ -1,6 +1,4 @@
 # Uploading PCA reduced data, as well as all the embeddings
-import json
-
 import datasets
 import pandas as pd
 import os
