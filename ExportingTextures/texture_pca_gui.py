@@ -4,21 +4,27 @@ import cv2
 from tkinter import Tk, Canvas, Scale, HORIZONTAL, Button, Frame, Scrollbar, filedialog
 from PIL import Image, ImageTk
 
+from ExportingTextures.create_texture_pca import EXPORTING_TEXTURES_FOLDER_PATH
+
 # Paths
 BASE_PATH = "D:/Projects/Pycharm Projects/PES-Face-Maker"
-PCA_MODEL_PATH = os.path.join(BASE_PATH, "pca_texture_model.npy")
+PCA_MODEL_PATH = os.path.join(EXPORTING_TEXTURES_FOLDER_PATH, "pca_texture_model.npy")
+GMM_MODEL_PATH = os.path.join(EXPORTING_TEXTURES_FOLDER_PATH, "gmm_texture_model.npy")
 OUTPUT_PATH = os.path.join(BASE_PATH, "generated_textures")
 os.makedirs(OUTPUT_PATH, exist_ok=True)
 
 # Load PCA model
 pca = np.load(PCA_MODEL_PATH, allow_pickle=True).item()
+coeff_min, coeff_max = np.load(os.path.join(BASE_PATH, "ExportingTextures/pca_texture_coeffs.npy"))
+TEXTURE_SIZE = np.sqrt(pca.mean_.shape[0] // 3).astype(int)
+
+# Load GMM model
+gmm = np.load(GMM_MODEL_PATH, allow_pickle=True).item()
 
 # PCA attributes
 mean_texture = pca.mean_
 components = pca.components_
 n_components = components.shape[0]
-
-TEXTURE_SIZE = 256
 
 
 # GUI Setup
@@ -69,8 +75,20 @@ class TextureGeneratorGUI:
         self.import_button.pack()
 
         # Generate Button
-        self.generate_button = Button(self.right_frame, text="Generate Texture", command=self.update_texture)
-        self.generate_button.pack()
+        self.update_button = Button(self.right_frame, text="Update Texture", command=self.update_texture)
+        self.update_button.pack()
+
+        self.randomize_button = Button(self.right_frame, text="Randomize Texture", command=self.randomize_texture)
+        self.randomize_button.pack()
+
+        self.random_natural_button = Button(self.right_frame, text="Randomize Natural Texture", command=self.randomize_natural_texture)
+        self.random_natural_button.pack()
+
+        self.project_button = Button(self.right_frame, text="Project to Nearest", command=self.project_to_nearest)
+        self.project_button.pack()
+
+        self.reverse_button = Button(self.right_frame, text="Reverse", command=self.reverse_texture)
+        self.reverse_button.pack()
 
         # Save Button
         self.save_button = Button(self.right_frame, text="Save Texture", command=self.save_texture)
@@ -96,7 +114,7 @@ class TextureGeneratorGUI:
     def update_texture(self, *_):
         # Update the texture based on slider values
         for i, slider in enumerate(self.sliders):
-            self.component_values[i] = slider.get()
+            self.component_values[i] = np.clip(slider.get(), -self.slider_ranges[i], self.slider_ranges[i])
 
         # Reconstruct the texture using the PCA components
         new_texture = mean_texture + np.dot(self.component_values, components)
@@ -107,6 +125,38 @@ class TextureGeneratorGUI:
         # Update the canvas with the new texture
         self.texture_preview = ImageTk.PhotoImage(image=Image.fromarray(new_texture))
         self.canvas.create_image(0, 0, anchor="nw", image=self.texture_preview)
+
+    def randomize_texture(self):
+        # Sample PCA coefficients from the multivariate Gaussian
+        sampled_coefficients = np.random.normal(0, np.sqrt(pca.explained_variance_), size=n_components)
+        self.component_values = sampled_coefficients
+
+        # Update sliders and texture
+        for i, value in enumerate(self.component_values):
+            self.sliders[i].set(value)
+        self.update_texture()
+
+    def project_to_nearest(self):
+        for i in range(len(self.component_values)):
+            self.component_values[i] = np.clip(self.component_values[i], coeff_min[i], coeff_max[i])
+            self.sliders[i].set(self.component_values[i])
+
+    def randomize_natural_texture(self):
+        # Sample random PCA coefficients from GMM model
+        sampled_coefficients = gmm.sample(1)[0][0]
+        self.component_values = sampled_coefficients
+
+        # Update sliders and texture
+        for i, value in enumerate(self.component_values):
+            self.sliders[i].set(value)
+
+        self.update_texture()
+
+    def reverse_texture(self):
+        for i in range(len(self.component_values)):
+            self.component_values[i] = -self.component_values[i]
+            self.sliders[i].set(self.component_values[i])
+        self.update_texture()
 
     def save_texture(self):
         # Save the current texture
